@@ -2,7 +2,6 @@ module Heterogenous.Mapping where
 
 import Prelude
 
-import Data.Const (Const(..))
 import Data.Symbol (class IsSymbol, SProxy(..))
 import Data.Tuple (Tuple(..))
 import Prim.Row as Row
@@ -17,7 +16,7 @@ class Mapping f a b | f a -> b where
   mapping :: f -> a -> b
 
 class MappingWithIndex f i a b | f a -> i b where
-  mappingWithIndex :: f i -> a -> b
+  mappingWithIndex :: f -> i -> a -> b
 
 instance mappingFunction :: Mapping (a -> b) a b where
   mapping k = k
@@ -32,7 +31,7 @@ newtype Injecting f = Injecting (forall a. a -> f a)
 instance injMapping :: Mapping (Injecting f) a (f a) where
   mapping (Injecting k) = k
 
-data ApplyingProp r i = ApplyingProp { | r } i
+newtype ApplyingProp r = ApplyingProp { | r }
 
 instance applyingPPropMapping ::
   ( IsSymbol sym
@@ -40,23 +39,22 @@ instance applyingPPropMapping ::
   ) =>
   MappingWithIndex (ApplyingProp r) (SProxy sym) a b
   where
-  mappingWithIndex (ApplyingProp r prop) =
+  mappingWithIndex (ApplyingProp r) prop =
     Record.get prop r
+
+newtype ConstMapping f = ConstMapping f
 
 instance constMapping ::
   Mapping f a b =>
-  MappingWithIndex (Const f) ix a b
+  MappingWithIndex (ConstMapping f) ix a b
   where
-  mappingWithIndex (Const f) = mapping f
-
-newtype WithIndex (f :: Type -> Type) =
-  WithIndex (forall i. i -> f i)
+  mappingWithIndex (ConstMapping f) _ = mapping f
 
 class HMap f a b | a -> f b where
   hmap :: f -> a -> b
 
 class HMapWithIndex f a b | a -> f b where
-  hmapWithIndex :: WithIndex f -> a -> b
+  hmapWithIndex :: f -> a -> b
 
 newtype App f a = App (f a)
 
@@ -71,17 +69,14 @@ instance hmapApp ::
 
 instance hmapRecord ::
   ( RL.RowToList rin rl
-  , MapRecordWithIndex rl (Const fn) rin rout
+  , MapRecordWithIndex rl (ConstMapping fn) rin rout
   ) =>
   HMap fn { | rin } { | rout }
   where
   hmap =
     Builder.build
       <<< mapRecordWithIndexBuilder (RLProxy :: RLProxy rl)
-      <<< withIndex
-    where
-    withIndex :: fn -> WithIndex (Const fn)
-    withIndex fn = WithIndex (const (Const fn))
+      <<< ConstMapping
 
 instance hmapWithIndexRecord ::
   ( RL.RowToList rin rl
@@ -93,8 +88,8 @@ instance hmapWithIndexRecord ::
     Builder.build
       <<< mapRecordWithIndexBuilder (RLProxy :: RLProxy rl)
 
-class MapRecordWithIndex (xs :: RowList) (f :: Type -> Type) (as :: # Type) (bs :: # Type) | xs f -> as bs where
-  mapRecordWithIndexBuilder :: RLProxy xs -> WithIndex f -> Builder { | as } { | bs }
+class MapRecordWithIndex (xs :: RowList) f (as :: # Type) (bs :: # Type) | xs f -> as bs where
+  mapRecordWithIndexBuilder :: RLProxy xs -> f -> Builder { | as } { | bs }
 
 instance mapRecordWithIndexCons ::
   ( IsSymbol sym
@@ -105,9 +100,9 @@ instance mapRecordWithIndexCons ::
   ) =>
   MapRecordWithIndex (RL.Cons sym a rest) f as bs
   where
-  mapRecordWithIndexBuilder _ (WithIndex f) =
-    Builder.modify prop (mappingWithIndex (f prop))
-      <<< mapRecordWithIndexBuilder (RLProxy :: RLProxy rest) (WithIndex f)
+  mapRecordWithIndexBuilder _ f =
+    Builder.modify prop (mappingWithIndex f prop)
+      <<< mapRecordWithIndexBuilder (RLProxy :: RLProxy rest) f
     where
     prop = SProxy :: SProxy sym
 
@@ -136,4 +131,4 @@ zipRecord :: forall fns rin rout.
   { | rin } ->
   { | rout }
 zipRecord rs =
-  hmapWithIndex (WithIndex (ApplyingProp rs))
+  hmapWithIndex (ApplyingProp rs)
