@@ -1,4 +1,4 @@
-module Heterogenous.Folding where
+module Heterogeneous.Folding where
 
 import Data.Foldable (class Foldable, foldl)
 import Data.FoldableWithIndex (class FoldableWithIndex, foldlWithIndex)

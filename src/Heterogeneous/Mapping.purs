@@ -1,4 +1,4 @@
-module Heterogenous.Mapping where
+module Heterogeneous.Mapping where
 
 import Prelude
 

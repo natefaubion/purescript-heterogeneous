@@ -3,7 +3,7 @@ module Test.HList where
 import Prelude
 
 import Data.Tuple (Tuple(..))
-import Heterogenous.Folding (class Folding, class FoldingWithIndex, class HFoldl, class HFoldlWithIndex, folding, foldingWithIndex, hfoldl, hfoldlWithIndex)
+import Heterogeneous.Folding (class Folding, class FoldingWithIndex, class HFoldl, class HFoldlWithIndex, folding, foldingWithIndex, hfoldl, hfoldlWithIndex)
 
 foreign import kind Peano
 foreign import data S :: Peano -> Peano

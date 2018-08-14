@@ -1,13 +1,13 @@
 {
-  "name": "purescript-heterogenous",
-  "homepage": "https://github.com/natefaubion/purescript-heterogenous",
+  "name": "purescript-heterogeneous",
+  "homepage": "https://github.com/natefaubion/purescript-heterogeneous",
   "authors": [
     "Nathan Faubion <nathan@n-son.com>"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/natefaubion/purescript-heterogenous.git"
+    "url": "git://github.com/natefaubion/purescript-heterogeneous.git"
   },
   "ignore": [
     "**/.*",

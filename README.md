@@ -1,9 +1,9 @@
-# purescript-heterogenous
+# purescript-heterogeneous
 
-[![Latest release](http://img.shields.io/github/release/natefaubion/purescript-heterogenous.svg)](https://github.com/natefaubion/purescript-heterogenous/releases)
-[![Build status](https://travis-ci.org/natefaubion/purescript-heterogenous.svg?branch=master)](https://travis-ci.org/natefaubion/purescript-heterogenous)
+[![Latest release](http://img.shields.io/github/release/natefaubion/purescript-heterogeneous.svg)](https://github.com/natefaubion/purescript-heterogeneous/releases)
+[![Build status](https://travis-ci.org/natefaubion/purescript-heterogeneous.svg?branch=master)](https://travis-ci.org/natefaubion/purescript-heterogeneous)
 
-Maps and folds for heterogenous data types.
+Maps and folds for heterogeneous data types.
 
 ## Why?
 
@@ -12,7 +12,7 @@ shape of our data in fine detail. For example, Records and row-types let us
 write ergonomic, polymorphic, structurally-typed data. However, writing generic
 operations over such data types often involves a lot of tedious, constraint-level
 tricks. This library provides a framework which separates the traversal and
-summary logic for heterogenous data types, like `Functor` and `Foldable` do for
+summary logic for heterogeneous data types, like `Functor` and `Foldable` do for
 homogenous types, so we can reduce the boilerplate and tricks while sharing
 implementations.
 
@@ -26,7 +26,7 @@ This library exports several classes for both indexed and unindexed folds and ma
 * `class HFoldlWithIndex` and `hfoldlWithIndex`
 
 These are similar to their homogenous counterparts. In fact, the folds and maps we
-write for heterogenous types can be reused for homogenous data via the `App f a`
+write for heterogeneous types can be reused for homogenous data via the `App f a`
 newtype. That is, the following are identical:
 
 ```purescript
@@ -41,7 +41,7 @@ dispatching these is slightly different as we'll need to use PureScript's constr
 system.
 
 The following examples will operate over `Record` types, since it is the most
-ubiquitous heterogenous data type in PureScript.
+ubiquitous heterogeneous data type in PureScript.
 
 ### Example: Mapping over a homogenous Record
 
@@ -56,7 +56,7 @@ hmap (add 1 >>> show) { a: 1, b: 2, c: 3 }
 { a: "2", b: "3", c: "4" }
 ```
 
-### Example: Mapping over a heterogenous Record
+### Example: Mapping over a heterogeneous Record
 
 In the previous example, we can generalize our mapping function:
 
@@ -92,7 +92,7 @@ hmap AddOneAndShow { a: 1, b: 2.0, c: { x: 12, y: 42 } }
 { a: "2", b: "3.0", c: "{ x: 13, y: 43 }" }
 ```
 
-### Example: Mapping over a heterogenous Record with additional arguments
+### Example: Mapping over a heterogeneous Record with additional arguments
 
 With normal functions, we can use partial application to thread in additional
 context for our mapping function. We can do the same here by adding arguments
@@ -151,7 +151,7 @@ hfoldl (add :: Int -> Int -> Int) 0 { a: 12, b: 42, c: 100 }
 The homogenous case needs a monomorphic function, so we've specialized the type of
 `add` with a type signature.
 
-### Example: Folding over a heterogenous Record
+### Example: Folding over a heterogeneous Record
 
 In this example we will implement an alternative `Show` instance using String
 concatenation instead of building an intermediate data structure. First, the
@@ -195,4 +195,4 @@ showRecord { a: "foo" , b: 42 , c: false }
 
 ## Documentation
 
-- Module documentation is [published on Pursuit](http://pursuit.purescript.org/packages/purescript-heterogenous).
+- Module documentation is [published on Pursuit](http://pursuit.purescript.org/packages/purescript-heterogeneous).
