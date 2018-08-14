@@ -13,7 +13,7 @@ write ergonomic, polymorphic, structurally-typed data. However, writing generic
 operations over such data types often involves a lot of tedious, constraint-level
 tricks. This library provides a framework which separates the traversal and
 summary logic for heterogeneous data types, like `Functor` and `Foldable` do for
-homogenous types, so we can reduce the boilerplate and tricks while sharing
+homogeneous types, so we can reduce the boilerplate and tricks while sharing
 implementations.
 
 ## How to use this library
@@ -25,8 +25,8 @@ This library exports several classes for both indexed and unindexed folds and ma
 * `class HFoldl` and `hfoldl`
 * `class HFoldlWithIndex` and `hfoldlWithIndex`
 
-These are similar to their homogenous counterparts. In fact, the folds and maps we
-write for heterogeneous types can be reused for homogenous data via the `App f a`
+These are similar to their homogeneous counterparts. In fact, the folds and maps we
+write for heterogeneous types can be reused for homogeneous data via the `App f a`
 newtype. That is, the following are identical:
 
 ```purescript
@@ -43,10 +43,10 @@ system.
 The following examples will operate over `Record` types, since it is the most
 ubiquitous heterogeneous data type in PureScript.
 
-### Example: Mapping over a homogenous Record
+### Example: Mapping over a homogeneous Record
 
-Records aren't every actually homogenous to the type system, but sometimes all the
-values end up being the same time. Mapping over an apparently homogenous `Record`
+Records aren't every actually homogeneous to the type system, but sometimes all the
+values end up being the same time. Mapping over an apparently homogeneous `Record`
 is as simple as using a normal (monomorphic) function.
 
 ```purescript
@@ -66,7 +66,7 @@ addOneAndShow = add one >>> show
 ```
 
 However, we won't be able to dispatch this without giving it a monomorphic type
-signature which fixes it to a homogenous `Record` like before. We want to be able to
+signature which fixes it to a homogeneous `Record` like before. We want to be able to
 instantiate these dictionaries for each member individually. To do that, we first
 need a data type to represent our mapping function:
 
@@ -137,9 +137,9 @@ in
 { a: 13, b: (Tuple "bar" 42.0), c: false }
 ```
 
-### Example: Folding over a homogenous Record
+### Example: Folding over a homogeneous Record
 
-Much like with `hmap`, we can fold over homogenous records using normal functions.
+Much like with `hmap`, we can fold over homogeneous records using normal functions.
 
 ```purescript
 hfoldl (add :: Int -> Int -> Int) 0 { a: 12, b: 42, c: 100 }
@@ -148,7 +148,7 @@ hfoldl (add :: Int -> Int -> Int) 0 { a: 12, b: 42, c: 100 }
 154
 ```
 
-The homogenous case needs a monomorphic function, so we've specialized the type of
+The homogeneous case needs a monomorphic function, so we've specialized the type of
 `add` with a type signature.
 
 ### Example: Folding over a heterogeneous Record
