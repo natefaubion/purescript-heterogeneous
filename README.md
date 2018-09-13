@@ -45,8 +45,8 @@ ubiquitous heterogeneous data type in PureScript.
 
 ### Example: Mapping over a homogeneous Record
 
-Records aren't every actually homogeneous to the type system, but sometimes all the
-values end up being the same time. Mapping over an apparently homogeneous `Record`
+Records aren't ever actually homogeneous to the type system, but sometimes all the
+values end up being the same type. Mapping over an apparently homogeneous `Record`
 is as simple as using a normal (monomorphic) function.
 
 ```purescript
