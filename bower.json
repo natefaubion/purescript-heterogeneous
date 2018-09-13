@@ -19,7 +19,9 @@
     "purescript-prelude": "^4.1.0",
     "purescript-record": "^1.0.0",
     "purescript-tuples": "^5.0.0",
-    "purescript-functors": "^3.0.1"
+    "purescript-functors": "^3.0.1",
+    "purescript-variant": "^5.1.0",
+    "purescript-either": "^4.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"

@@ -2,10 +2,15 @@ module Heterogeneous.Mapping where
 
 import Prelude
 
+import Data.Either (Either(..))
 import Data.Functor.App (App(..))
+import Data.Functor.Variant (FProxy, VariantF)
+import Data.Functor.Variant as VariantF
 import Data.FunctorWithIndex (class FunctorWithIndex, mapWithIndex)
 import Data.Symbol (class IsSymbol, SProxy(..))
 import Data.Tuple (Tuple(..))
+import Data.Variant (Variant)
+import Data.Variant as Variant
 import Prim.Row as Row
 import Prim.RowList (kind RowList)
 import Prim.RowList as RL
@@ -104,3 +109,92 @@ instance hmapTuple ::
   where
   hmap fn (Tuple a b) =
     Tuple (mapping fn a) (mapping fn b)
+
+instance hmapEither ::
+  ( Mapping fn a a'
+  , Mapping fn b b'
+  ) =>
+  HMap fn (Either a b) (Either a' b')
+  where
+  hmap fn = case _ of
+    Left a -> Left (mapping fn a)
+    Right b -> Right (mapping fn b)
+
+instance hmapVariant ::
+  ( RL.RowToList rin rl
+  , MapVariantWithIndex rl (ConstMapping fn) rin rout
+  ) =>
+  HMap fn (Variant rin) (Variant rout)
+  where
+  hmap =
+    mapVariantWithIndex (RLProxy :: RLProxy rl) <<< ConstMapping
+
+instance hmapWithIndexVariant ::
+  ( RL.RowToList rin rl
+  , MapVariantWithIndex rl fn rin rout
+  ) =>
+  HMapWithIndex fn (Variant rin) (Variant rout)
+  where
+  hmapWithIndex =
+    mapVariantWithIndex (RLProxy :: RLProxy rl)
+
+class MapVariantWithIndex (xs :: RowList) f (as :: # Type) (bs :: # Type) | xs -> f as bs where
+  mapVariantWithIndex :: RLProxy xs -> f -> Variant as -> Variant bs
+
+instance mapVariantWithIndexCons ::
+  ( IsSymbol sym
+  , Row.Cons sym a r1 r2
+  , Row.Cons sym b r3 r4
+  , MappingWithIndex fn (SProxy sym) a b
+  , MapVariantWithIndex rest fn r1 r4
+  ) =>
+  MapVariantWithIndex (RL.Cons sym a rest) fn r2 r4
+  where
+  mapVariantWithIndex _ fn =
+    mapVariantWithIndex (RLProxy :: RLProxy rest) fn
+      # Variant.on label (Variant.inj label <<< mappingWithIndex fn label)
+    where
+    label = SProxy :: SProxy sym
+
+instance mapVariantWithIndexNil :: MapVariantWithIndex RL.Nil fn () r where
+  mapVariantWithIndex _ _ = Variant.case_
+
+instance hmapVariantF ::
+  ( RL.RowToList rin rl
+  , MapVariantFWithIndex rl (ConstMapping fn) rin rout x y
+  ) =>
+  HMap fn (VariantF rin x) (VariantF rout y)
+  where
+  hmap =
+    mapVariantFWithIndex (RLProxy :: RLProxy rl) <<< ConstMapping
+
+instance hmapWithIndexVariantF ::
+  ( RL.RowToList rin rl
+  , MapVariantFWithIndex rl fn rin rout x y
+  ) =>
+  HMapWithIndex fn (VariantF rin x) (VariantF rout y)
+  where
+  hmapWithIndex =
+    mapVariantFWithIndex (RLProxy :: RLProxy rl)
+
+class MapVariantFWithIndex (xs :: RowList) f (as :: # Type) (bs :: # Type) x y | xs -> f as bs x y where
+  mapVariantFWithIndex :: RLProxy xs -> f -> VariantF as x -> VariantF bs y
+
+instance mapVariantFWithIndexCons ::
+  ( IsSymbol sym
+  , Row.Cons sym (FProxy a) r1 r2
+  , Row.Cons sym (FProxy b) r3 r4
+  , MappingWithIndex fn (SProxy sym) (a x) (b y)
+  , MapVariantFWithIndex rest fn r1 r4 x y
+  , Functor b
+  ) =>
+  MapVariantFWithIndex (RL.Cons sym (FProxy a) rest) fn r2 r4 x y
+  where
+  mapVariantFWithIndex _ fn =
+    mapVariantFWithIndex (RLProxy :: RLProxy rest) fn
+      # VariantF.on label (VariantF.inj label <<< mappingWithIndex fn label)
+    where
+    label = SProxy :: SProxy sym
+
+instance mapVariantFWithIndexNil :: MapVariantFWithIndex RL.Nil fn () r x y where
+  mapVariantFWithIndex _ _ = VariantF.case_
