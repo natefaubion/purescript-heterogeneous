@@ -34,7 +34,7 @@ instance functionFoldingWithIndex :: FoldingWithIndex (i -> x -> y -> x) i x y x
 class HFoldl f x a b | f a -> x b where
   hfoldl :: f -> x -> a -> b
 
-class HFoldlWithIndex f x a b | a -> f x b where
+class HFoldlWithIndex f x a b | f a -> x b where
   hfoldlWithIndex :: f -> x -> a -> b
 
 newtype ConstFolding f = ConstFolding f

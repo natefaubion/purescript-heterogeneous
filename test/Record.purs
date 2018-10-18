@@ -136,7 +136,7 @@ traverseRecord :: forall f k rin rout.
   f { | rout }
 traverseRecord k =
   map (flip Builder.build {}) <<<
-    hfoldlWithIndex (TraverseProp k) (pure identity)
+    hfoldlWithIndex (TraverseProp k :: TraverseProp f k) (pure identity)
 
 test1 :: _
 test1 =
@@ -186,7 +186,7 @@ sequencePropsOf :: forall f rin rout.
   { | rin } ->
   f { | rout }
 sequencePropsOf =
-  map (flip Builder.build {}) <<< hfoldlWithIndex SequencePropOf (pure identity)
+  map (flip Builder.build {}) <<< hfoldlWithIndex (SequencePropOf :: SequencePropOf f) (pure identity)
 
 test :: Maybe _
 test =
@@ -218,8 +218,8 @@ countRights :: forall r. HFoldl CountRight Int { | r } Int => { | r } -> Int
 countRights = hfoldl CountRight 0
 
 countBoth :: forall r.
-  HFoldl CountLeft Int r Int =>
-  HFoldl CountRight Int r Int =>
+  HFoldl CountLeft Int { | r } Int =>
+  HFoldl CountRight Int { | r } Int =>
   { | r } ->
   Int
 countBoth r = countRights r + countLefts r
