@@ -2,13 +2,15 @@ module Test.Record where
 
 import Prelude
 
+import Data.Bifunctor (lmap)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Symbol (class IsSymbol, SProxy, reflectSymbol)
 import Data.Tuple (Tuple(..))
 import Heterogeneous.Folding (class Folding, class FoldingWithIndex, class HFoldl, class HFoldlWithIndex, hfoldl, hfoldlWithIndex)
-import Heterogeneous.Mapping (class HMapWithIndex, class Mapping, class MappingWithIndex, hmap, hmapWithIndex, mapping)
+import Heterogeneous.Mapping (class HMapWithIndex, class MapRecordWithIndex, class Mapping, class MappingWithIndex, hmap, hmapWithIndex, mapping)
 import Prim.Row as Row
+import Prim.RowList (class RowToList)
 import Record as Record
 import Record.Builder (Builder)
 import Record.Builder as Builder
@@ -195,6 +197,69 @@ test =
     , b: Nothing
     , c: 42
     }
+
+-----
+-- Verify that multiple maps can be used in constraints
+
+newtype ReplaceLeft r = ReplaceLeft { | r }
+
+instance replaceLeftH ::
+  (IsSymbol sym, Row.Cons sym a x vals) =>
+  MappingWithIndex (ReplaceLeft vals) (SProxy sym) (Either a b) (Either a b) where
+  mappingWithIndex (ReplaceLeft vals) prop = lmap (const $ Record.get prop vals)
+
+replaceLeft :: forall rvals rin rout.
+  HMapWithIndex (ReplaceLeft rvals) { | rin } { | rout } =>
+  { | rvals } ->
+  { | rin  } ->
+  { | rout }
+replaceLeft =
+  hmapWithIndex <<< ReplaceLeft
+
+testReplaceLeft :: _
+testReplaceLeft =
+  { a: "goodbye"
+  , b: 100
+  }
+  `replaceLeft`
+  { a: Left "hello"
+  , b: Right 1
+  }
+
+newtype ReplaceRight r = ReplaceRight { | r }
+
+instance replaceRightH ::
+  (IsSymbol sym, Row.Cons sym b x vals) =>
+  MappingWithIndex (ReplaceRight vals) (SProxy sym) (Either a b) (Either a b) where
+  mappingWithIndex (ReplaceRight vals) prop = map (const $ Record.get prop vals)
+
+replaceRight :: forall rvals rin rout.
+  HMapWithIndex (ReplaceRight rvals) { | rin } { | rout } =>
+  { | rvals } ->
+  { | rin  } ->
+  { | rout }
+replaceRight =
+  hmapWithIndex <<< ReplaceRight
+
+testReplaceRight :: _
+testReplaceRight =
+  { a: "goodbye"
+  , b: 100
+  }
+  `replaceRight`
+  { a: Left "hello"
+  , b: Right 1
+  }
+
+testReplaceBoth :: forall rvals rin rout rs.
+  RowToList rout rs =>
+  HMapWithIndex (ReplaceLeft rvals) { | rin } { | rout } =>
+  HMapWithIndex (ReplaceRight rvals) { | rin } { | rout } =>
+  MapRecordWithIndex rs (ReplaceRight rvals) rout rout =>
+  { | rvals } ->
+  { | rin  } ->
+  { | rout }
+testReplaceBoth vals = replaceRight vals <<< replaceLeft vals
 
 -----
 -- Verify that multiple folds can be used in constraints.
