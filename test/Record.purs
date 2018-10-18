@@ -2,10 +2,11 @@ module Test.Record where
 
 import Prelude
 
+import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Symbol (class IsSymbol, SProxy, reflectSymbol)
 import Data.Tuple (Tuple(..))
-import Heterogeneous.Folding (class FoldingWithIndex, class HFoldlWithIndex, hfoldlWithIndex)
+import Heterogeneous.Folding (class Folding, class FoldingWithIndex, class HFoldl, class HFoldlWithIndex, hfoldl, hfoldlWithIndex)
 import Heterogeneous.Mapping (class HMapWithIndex, class Mapping, class MappingWithIndex, hmap, hmapWithIndex, mapping)
 import Prim.Row as Row
 import Record as Record
@@ -194,3 +195,55 @@ test =
     , b: Nothing
     , c: 42
     }
+
+-----
+-- Verify that multiple folds can be used in constraints.
+
+data CountLeft = CountLeft
+
+instance countLeft :: Folding CountLeft Int (Either a b) Int where
+  folding CountLeft acc (Left _) = acc + 1
+  folding CountLeft acc _ = acc
+
+countLefts :: forall r. HFoldl CountLeft Int { | r } Int => { | r } -> Int
+countLefts = hfoldl CountLeft 0
+
+data CountRight = CountRight
+
+instance countRight :: Folding CountRight Int (Either a b) Int where
+  folding CountRight acc (Right _) = acc + 1
+  folding CountRight acc _ = acc
+
+countRights :: forall r. HFoldl CountRight Int { | r } Int => { | r } -> Int
+countRights = hfoldl CountRight 0
+
+countBoth :: forall r.
+  HFoldl CountLeft Int r Int =>
+  HFoldl CountRight Int r Int =>
+  { | r } ->
+  Int
+countBoth r = countRights r + countLefts r
+
+-----
+-- Verify that multiple folds can be used in constraints.
+
+data ShowValues = ShowValues
+
+instance showValues ::
+  (Show a, IsSymbol sym) =>
+  FoldingWithIndex ShowValues (SProxy sym) String a String
+  where
+  foldingWithIndex _ prop str a = pre <> show a
+    where
+    pre | str == "" = ""
+        | otherwise = str <> ", "
+
+showTwice :: forall r.
+  HFoldlWithIndex ShowProps String { | r } String =>
+  HFoldlWithIndex ShowValues String { | r } String =>
+  { | r } ->
+  String
+showTwice r = do
+  let a = "{ " <> hfoldlWithIndex ShowProps "" r <> " }"
+      b = "[ " <> hfoldlWithIndex ShowValues "" r <> " ]"
+  a <> b
