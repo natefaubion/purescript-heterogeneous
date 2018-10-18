@@ -35,10 +35,10 @@ instance constMapping ::
   where
   mappingWithIndex (ConstMapping f) _ = mapping f
 
-class HMap f a b | a -> f b where
+class HMap f a b | f a -> b where
   hmap :: f -> a -> b
 
-class HMapWithIndex f a b | a -> f b where
+class HMapWithIndex f a b | f a -> b where
   hmapWithIndex :: f -> a -> b
 
 instance hmapApp ::
