@@ -251,12 +251,12 @@ testReplaceRight =
   , b: Right 1
   }
 
-testReplaceBoth :: forall rvals rin rmid rout.
-  HMapWithIndex (ReplaceLeft rvals) { | rin } { | rmid } =>
-  HMapWithIndex (ReplaceRight rvals) { | rmid } { | rout } =>
+testReplaceBoth :: forall rvals r.
+  HMapWithIndex (ReplaceLeft rvals) { | r } { | r } =>
+  HMapWithIndex (ReplaceRight rvals) { | r } { | r } =>
   { | rvals } ->
-  { | rin  } ->
-  { | rout }
+  { | r } ->
+  { | r }
 testReplaceBoth vals =
   replaceLeft vals >>> replaceRight vals
 
