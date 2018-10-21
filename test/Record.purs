@@ -8,9 +8,8 @@ import Data.Maybe (Maybe(..))
 import Data.Symbol (class IsSymbol, SProxy, reflectSymbol)
 import Data.Tuple (Tuple(..))
 import Heterogeneous.Folding (class Folding, class FoldingWithIndex, class HFoldl, class HFoldlWithIndex, hfoldl, hfoldlWithIndex)
-import Heterogeneous.Mapping (class HMapWithIndex, class MapRecordWithIndex, class Mapping, class MappingWithIndex, hmap, hmapWithIndex, mapping)
+import Heterogeneous.Mapping (class HMapWithIndex, class Mapping, class MappingWithIndex, hmap, hmapWithIndex, mapping)
 import Prim.Row as Row
-import Prim.RowList (class RowToList)
 import Record as Record
 import Record.Builder (Builder)
 import Record.Builder as Builder
@@ -132,13 +131,13 @@ instance traverseProp ::
 
 traverseRecord :: forall f k rin rout.
   Applicative f =>
-  HFoldlWithIndex (TraverseProp f k) (f (Builder {} {})) { | rin } (f (Builder {} { | rout})) =>
+  HFoldlWithIndex (TraverseProp f k) (f (Builder {} {})) { | rin } (f (Builder {} { | rout })) =>
   k ->
   { | rin } ->
   f { | rout }
 traverseRecord k =
-  map (flip Builder.build {}) <<<
-    hfoldlWithIndex (TraverseProp k :: TraverseProp f k) (pure identity)
+  map (flip Builder.build {})
+    <<< hfoldlWithIndex (TraverseProp k :: TraverseProp f k) (pure identity :: f (Builder {} {}))
 
 test1 :: _
 test1 =
@@ -188,7 +187,8 @@ sequencePropsOf :: forall f rin rout.
   { | rin } ->
   f { | rout }
 sequencePropsOf =
-  map (flip Builder.build {}) <<< hfoldlWithIndex (SequencePropOf :: SequencePropOf f) (pure identity)
+  map (flip Builder.build {})
+    <<< hfoldlWithIndex (SequencePropOf :: SequencePropOf f) (pure identity :: f (Builder {} {}))
 
 test :: Maybe _
 test =
@@ -211,7 +211,7 @@ instance replaceLeftH ::
 replaceLeft :: forall rvals rin rout.
   HMapWithIndex (ReplaceLeft rvals) { | rin } { | rout } =>
   { | rvals } ->
-  { | rin  } ->
+  { | rin } ->
   { | rout }
 replaceLeft =
   hmapWithIndex <<< ReplaceLeft
@@ -236,7 +236,7 @@ instance replaceRightH ::
 replaceRight :: forall rvals rin rout.
   HMapWithIndex (ReplaceRight rvals) { | rin } { | rout } =>
   { | rvals } ->
-  { | rin  } ->
+  { | rin } ->
   { | rout }
 replaceRight =
   hmapWithIndex <<< ReplaceRight
@@ -251,15 +251,15 @@ testReplaceRight =
   , b: Right 1
   }
 
-testReplaceBoth :: forall rvals rin rout rs.
-  RowToList rout rs =>
-  HMapWithIndex (ReplaceLeft rvals) { | rin } { | rout } =>
-  HMapWithIndex (ReplaceRight rvals) { | rin } { | rout } =>
-  MapRecordWithIndex rs (ReplaceRight rvals) rout rout =>
+testReplaceBoth :: forall rvals rin rmid rout.
+  HMapWithIndex (ReplaceLeft rvals) { | rin } { | rmid } =>
+  HMapWithIndex (ReplaceRight rvals) { | rmid } { | rout } =>
   { | rvals } ->
   { | rin  } ->
   { | rout }
-testReplaceBoth vals = replaceRight vals <<< replaceLeft vals
+testReplaceBoth vals =
+  (replaceLeft vals :: { | rin } -> { | rmid }) >>>
+  (replaceRight vals :: { | rmid } -> { | rout })
 
 -----
 -- Verify that multiple folds can be used in constraints.

@@ -25,16 +25,16 @@ class Folding f x y z | f x y -> z where
 instance functionFolding :: Folding (x -> y -> x) x y x where
   folding f = f
 
-class FoldingWithIndex f i x y z | f x y -> z, f -> i where
+class FoldingWithIndex f i x y z | f i x y -> z where
   foldingWithIndex :: f -> i -> x -> y -> z
 
 instance functionFoldingWithIndex :: FoldingWithIndex (i -> x -> y -> x) i x y x where
   foldingWithIndex f = f
 
-class HFoldl f x a b | f a -> x b where
+class HFoldl f x a b | f x a -> b where
   hfoldl :: f -> x -> a -> b
 
-class HFoldlWithIndex f x a b | f a -> x b where
+class HFoldlWithIndex f x a b | f x a -> b where
   hfoldlWithIndex :: f -> x -> a -> b
 
 newtype ConstFolding f = ConstFolding f
@@ -106,7 +106,7 @@ instance hfoldlRecordWithIndex ::
   hfoldlWithIndex f x =
     foldlRecordRowList f x (RLProxy :: RLProxy rl)
 
-class FoldlRecord f x (rl :: RowList) (r :: # Type) b | rl -> f x r b where
+class FoldlRecord f x (rl :: RowList) (r :: # Type) b | f x rl -> b, rl -> r where
   foldlRecordRowList :: f -> x -> RLProxy rl -> { | r } -> b
 
 instance foldlRecordCons ::
@@ -166,7 +166,7 @@ instance hfoldlVariantWithIndex ::
   hfoldlWithIndex =
     foldlVariantRowList (RLProxy :: RLProxy rl)
 
-class FoldlVariant f x (rl :: RowList) (r :: # Type) b | rl -> f x r b where
+class FoldlVariant f x (rl :: RowList) (r :: # Type) b | f x rl -> b, rl -> r where
   foldlVariantRowList :: RLProxy rl -> f -> x -> Variant r -> b
 
 instance foldlVariantCons ::
@@ -204,7 +204,7 @@ instance hfoldlVariantFWithIndex ::
   hfoldlWithIndex =
     foldlVariantFRowList (RLProxy :: RLProxy rl)
 
-class FoldlVariantF f x (rl :: RowList) (r :: # Type) z y | rl -> f x r z y where
+class FoldlVariantF f x (rl :: RowList) (r :: # Type) z y | f x rl z -> r y where
   foldlVariantFRowList :: RLProxy rl -> f -> x -> VariantF r z -> y
 
 instance foldlVariantFCons ::

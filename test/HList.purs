@@ -89,7 +89,7 @@ showWithIndex :: forall hlist.
   hlist ->
   Array (Tuple Int String)
 showWithIndex =
-  hfoldlWithIndex ShowWithIndex []
+  hfoldlWithIndex ShowWithIndex ([] :: Array (Tuple Int String))
 
 testShow :: _
 testShow =
