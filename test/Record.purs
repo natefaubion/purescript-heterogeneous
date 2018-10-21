@@ -258,8 +258,7 @@ testReplaceBoth :: forall rvals rin rmid rout.
   { | rin  } ->
   { | rout }
 testReplaceBoth vals =
-  (replaceLeft vals :: { | rin } -> { | rmid }) >>>
-  (replaceRight vals :: { | rmid } -> { | rout })
+  replaceLeft vals >>> replaceRight vals
 
 -----
 -- Verify that multiple folds can be used in constraints.
