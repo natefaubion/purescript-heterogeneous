@@ -2,10 +2,12 @@ module Test.Record where
 
 import Prelude
 
+import Data.Bifunctor (lmap)
+import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Symbol (class IsSymbol, SProxy, reflectSymbol)
 import Data.Tuple (Tuple(..))
-import Heterogeneous.Folding (class FoldingWithIndex, class HFoldlWithIndex, hfoldlWithIndex)
+import Heterogeneous.Folding (class Folding, class FoldingWithIndex, class HFoldl, class HFoldlWithIndex, hfoldl, hfoldlWithIndex)
 import Heterogeneous.Mapping (class HMapWithIndex, class Mapping, class MappingWithIndex, hmap, hmapWithIndex, mapping)
 import Prim.Row as Row
 import Record as Record
@@ -129,13 +131,13 @@ instance traverseProp ::
 
 traverseRecord :: forall f k rin rout.
   Applicative f =>
-  HFoldlWithIndex (TraverseProp f k) (f (Builder {} {})) { | rin } (f (Builder {} { | rout})) =>
+  HFoldlWithIndex (TraverseProp f k) (f (Builder {} {})) { | rin } (f (Builder {} { | rout })) =>
   k ->
   { | rin } ->
   f { | rout }
 traverseRecord k =
-  map (flip Builder.build {}) <<<
-    hfoldlWithIndex (TraverseProp k) (pure identity)
+  map (flip Builder.build {})
+    <<< hfoldlWithIndex (TraverseProp k :: TraverseProp f k) (pure identity :: f (Builder {} {}))
 
 test1 :: _
 test1 =
@@ -185,7 +187,8 @@ sequencePropsOf :: forall f rin rout.
   { | rin } ->
   f { | rout }
 sequencePropsOf =
-  map (flip Builder.build {}) <<< hfoldlWithIndex SequencePropOf (pure identity)
+  map (flip Builder.build {})
+    <<< hfoldlWithIndex (SequencePropOf :: SequencePropOf f) (pure identity :: f (Builder {} {}))
 
 test :: Maybe _
 test =
@@ -194,3 +197,117 @@ test =
     , b: Nothing
     , c: 42
     }
+
+-----
+-- Verify that multiple maps can be used in constraints
+
+newtype ReplaceLeft r = ReplaceLeft { | r }
+
+instance replaceLeftH ::
+  (IsSymbol sym, Row.Cons sym a x vals) =>
+  MappingWithIndex (ReplaceLeft vals) (SProxy sym) (Either a b) (Either a b) where
+  mappingWithIndex (ReplaceLeft vals) prop = lmap (const $ Record.get prop vals)
+
+replaceLeft :: forall rvals rin rout.
+  HMapWithIndex (ReplaceLeft rvals) { | rin } { | rout } =>
+  { | rvals } ->
+  { | rin } ->
+  { | rout }
+replaceLeft =
+  hmapWithIndex <<< ReplaceLeft
+
+testReplaceLeft :: _
+testReplaceLeft =
+  { a: "goodbye"
+  , b: 100
+  }
+  `replaceLeft`
+  { a: Left "hello"
+  , b: Right 1
+  }
+
+newtype ReplaceRight r = ReplaceRight { | r }
+
+instance replaceRightH ::
+  (IsSymbol sym, Row.Cons sym b x vals) =>
+  MappingWithIndex (ReplaceRight vals) (SProxy sym) (Either a b) (Either a b) where
+  mappingWithIndex (ReplaceRight vals) prop = map (const $ Record.get prop vals)
+
+replaceRight :: forall rvals rin rout.
+  HMapWithIndex (ReplaceRight rvals) { | rin } { | rout } =>
+  { | rvals } ->
+  { | rin } ->
+  { | rout }
+replaceRight =
+  hmapWithIndex <<< ReplaceRight
+
+testReplaceRight :: _
+testReplaceRight =
+  { a: "goodbye"
+  , b: 100
+  }
+  `replaceRight`
+  { a: Left "hello"
+  , b: Right 1
+  }
+
+testReplaceBoth :: forall rvals r.
+  HMapWithIndex (ReplaceLeft rvals) { | r } { | r } =>
+  HMapWithIndex (ReplaceRight rvals) { | r } { | r } =>
+  { | rvals } ->
+  { | r } ->
+  { | r }
+testReplaceBoth vals =
+  replaceLeft vals >>> replaceRight vals
+
+-----
+-- Verify that multiple folds can be used in constraints.
+
+data CountLeft = CountLeft
+
+instance countLeft :: Folding CountLeft Int (Either a b) Int where
+  folding CountLeft acc (Left _) = acc + 1
+  folding CountLeft acc _ = acc
+
+countLefts :: forall r. HFoldl CountLeft Int { | r } Int => { | r } -> Int
+countLefts = hfoldl CountLeft 0
+
+data CountRight = CountRight
+
+instance countRight :: Folding CountRight Int (Either a b) Int where
+  folding CountRight acc (Right _) = acc + 1
+  folding CountRight acc _ = acc
+
+countRights :: forall r. HFoldl CountRight Int { | r } Int => { | r } -> Int
+countRights = hfoldl CountRight 0
+
+countBoth :: forall r.
+  HFoldl CountLeft Int { | r } Int =>
+  HFoldl CountRight Int { | r } Int =>
+  { | r } ->
+  Int
+countBoth r = countRights r + countLefts r
+
+-----
+-- Verify that multiple folds can be used in constraints.
+
+data ShowValues = ShowValues
+
+instance showValues ::
+  (Show a, IsSymbol sym) =>
+  FoldingWithIndex ShowValues (SProxy sym) String a String
+  where
+  foldingWithIndex _ prop str a = pre <> show a
+    where
+    pre | str == "" = ""
+        | otherwise = str <> ", "
+
+showTwice :: forall r.
+  HFoldlWithIndex ShowProps String { | r } String =>
+  HFoldlWithIndex ShowValues String { | r } String =>
+  { | r } ->
+  String
+showTwice r = do
+  let a = "{ " <> hfoldlWithIndex ShowProps "" r <> " }"
+      b = "[ " <> hfoldlWithIndex ShowValues "" r <> " ]"
+  a <> b

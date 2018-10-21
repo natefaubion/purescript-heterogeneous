@@ -21,7 +21,7 @@ import Type.Row (RLProxy(..))
 class Mapping f a b | f a -> b where
   mapping :: f -> a -> b
 
-class MappingWithIndex f i a b | f a -> b, f -> i where
+class MappingWithIndex f i a b | f i a -> b where
   mappingWithIndex :: f -> i -> a -> b
 
 instance mappingFunction :: Mapping (a -> b) a b where
@@ -35,10 +35,10 @@ instance constMapping ::
   where
   mappingWithIndex (ConstMapping f) _ = mapping f
 
-class HMap f a b | a -> f b where
+class HMap f a b | f a -> b where
   hmap :: f -> a -> b
 
-class HMapWithIndex f a b | a -> f b where
+class HMapWithIndex f a b | f a -> b where
   hmapWithIndex :: f -> a -> b
 
 instance hmapApp ::
@@ -80,7 +80,7 @@ instance hmapWithIndexRecord ::
     Builder.build
       <<< mapRecordWithIndexBuilder (RLProxy :: RLProxy rl)
 
-class MapRecordWithIndex (xs :: RowList) f (as :: # Type) (bs :: # Type) | xs -> f as bs where
+class MapRecordWithIndex (xs :: RowList) f (as :: # Type) (bs :: # Type) | xs f -> bs, xs -> as where
   mapRecordWithIndexBuilder :: RLProxy xs -> f -> Builder { | as } { | bs }
 
 instance mapRecordWithIndexCons ::
@@ -138,7 +138,7 @@ instance hmapWithIndexVariant ::
   hmapWithIndex =
     mapVariantWithIndex (RLProxy :: RLProxy rl)
 
-class MapVariantWithIndex (xs :: RowList) f (as :: # Type) (bs :: # Type) | xs -> f as bs where
+class MapVariantWithIndex (xs :: RowList) f (as :: # Type) (bs :: # Type) | xs f -> bs, xs -> as where
   mapVariantWithIndex :: RLProxy xs -> f -> Variant as -> Variant bs
 
 instance mapVariantWithIndexCons ::
@@ -177,7 +177,7 @@ instance hmapWithIndexVariantF ::
   hmapWithIndex =
     mapVariantFWithIndex (RLProxy :: RLProxy rl)
 
-class MapVariantFWithIndex (xs :: RowList) f (as :: # Type) (bs :: # Type) x y | xs -> f as bs x y where
+class MapVariantFWithIndex (xs :: RowList) f (as :: # Type) (bs :: # Type) x y | xs f x -> as bs y where
   mapVariantFWithIndex :: RLProxy xs -> f -> VariantF as x -> VariantF bs y
 
 instance mapVariantFWithIndexCons ::

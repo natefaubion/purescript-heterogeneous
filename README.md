@@ -193,6 +193,30 @@ showRecord { a: "foo" , b: 42 , c: false }
 "{ a: \"foo\", b: 42, c: false }"
 ```
 
+## Helping type inference along
+
+The compiler will not always be able to infer all types for the maps and folds
+we write for heterogeneous types. That's because it will attempt to determine
+an output from any combination of folding function, accumulator, and input (for
+folds) or mapping function and input (for maps). This ensures that multiple
+mapping and folding operations can be supported for the same underlying input,
+but has the downside that the compiler will not infer these types.
+
+You will need to provide annotations for any folding, mapping, accumulator, and
+input types that are not determined in some other way.
+
+For example, this sample `showWithIndex` function for showing a heterogeneous
+list requires an annotation for the accumulator type:
+
+```purescript
+showWithIndex :: forall hlist.
+  HFoldlWithIndex ShowWithIndex (Array (Tuple Int String)) hlist (Array (Tuple Int String)) =>
+  hlist ->
+  Array (Tuple Int String)
+showWithIndex =
+  hfoldlWithIndex ShowWithIndex ([] :: Array (Tuple Int String))
+```
+
 ## Documentation
 
 - Module documentation is [published on Pursuit](http://pursuit.purescript.org/packages/purescript-heterogeneous).
