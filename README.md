@@ -214,7 +214,7 @@ showWithIndex :: forall hlist.
   hlist ->
   Array (Tuple Int String)
 showWithIndex =
-	hfoldlWithIndex ShowWithIndex ([] :: Array (Tuple Int String))
+  hfoldlWithIndex ShowWithIndex ([] :: Array (Tuple Int String))
 ```
 
 ## Documentation
