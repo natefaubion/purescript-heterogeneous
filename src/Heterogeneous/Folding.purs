@@ -16,8 +16,8 @@ import Prim.Row as Row
 import Prim.RowList (kind RowList)
 import Prim.RowList as RL
 import Record as Record
+import Type.Data.RowList (RLProxy(..))
 import Type.Proxy (Proxy(..))
-import Type.Row (RLProxy(..))
 
 class Folding f x y z | f x y -> z where
   folding :: f -> x -> y -> z

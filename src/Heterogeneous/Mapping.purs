@@ -16,7 +16,7 @@ import Prim.RowList (kind RowList)
 import Prim.RowList as RL
 import Record.Builder (Builder)
 import Record.Builder as Builder
-import Type.Row (RLProxy(..))
+import Type.Data.RowList (RLProxy(..))
 
 class Mapping f a b | f a -> b where
   mapping :: f -> a -> b
