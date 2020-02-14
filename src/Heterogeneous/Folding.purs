@@ -13,7 +13,7 @@ import Data.Tuple (Tuple(..))
 import Data.Variant (Variant)
 import Data.Variant as Variant
 import Prim.Row as Row
-import Prim.RowList (kind RowList)
+import Prim.RowList (RowList)
 import Prim.RowList as RL
 import Record as Record
 import Type.Data.RowList (RLProxy(..))
@@ -106,7 +106,7 @@ instance hfoldlRecordWithIndex ::
   hfoldlWithIndex f x =
     foldlRecordRowList f x (RLProxy :: RLProxy rl)
 
-class FoldlRecord f x (rl :: RowList) (r :: # Type) b | f x rl -> b, rl -> r where
+class FoldlRecord f x (rl :: RowList Type) (r :: Row Type) b | f x rl -> b, rl -> r where
   foldlRecordRowList :: f -> x -> RLProxy rl -> { | r } -> b
 
 instance foldlRecordCons ::
@@ -166,7 +166,7 @@ instance hfoldlVariantWithIndex ::
   hfoldlWithIndex =
     foldlVariantRowList (RLProxy :: RLProxy rl)
 
-class FoldlVariant f x (rl :: RowList) (r :: # Type) b | f x rl -> b, rl -> r where
+class FoldlVariant f x (rl :: RowList Type) (r :: Row Type) b | f x rl -> b, rl -> r where
   foldlVariantRowList :: RLProxy rl -> f -> x -> Variant r -> b
 
 instance foldlVariantCons ::
@@ -204,7 +204,7 @@ instance hfoldlVariantFWithIndex ::
   hfoldlWithIndex =
     foldlVariantFRowList (RLProxy :: RLProxy rl)
 
-class FoldlVariantF f x (rl :: RowList) (r :: # Type) z y | f x rl z -> r y where
+class FoldlVariantF f x (rl :: RowList Type) (r :: Row Type) z y | f x rl z -> r y where
   foldlVariantFRowList :: RLProxy rl -> f -> x -> VariantF r z -> y
 
 instance foldlVariantFCons ::

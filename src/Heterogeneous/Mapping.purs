@@ -12,7 +12,7 @@ import Data.Tuple (Tuple(..))
 import Data.Variant (Variant)
 import Data.Variant as Variant
 import Prim.Row as Row
-import Prim.RowList (kind RowList)
+import Prim.RowList (RowList)
 import Prim.RowList as RL
 import Record.Builder (Builder)
 import Record.Builder as Builder
@@ -80,7 +80,7 @@ instance hmapWithIndexRecord ::
     Builder.build
       <<< mapRecordWithIndexBuilder (RLProxy :: RLProxy rl)
 
-class MapRecordWithIndex (xs :: RowList) f (as :: # Type) (bs :: # Type) | xs f -> bs, xs -> as where
+class MapRecordWithIndex (xs :: RowList Type) f (as :: Row Type) (bs :: Row Type) | xs f -> bs, xs -> as where
   mapRecordWithIndexBuilder :: RLProxy xs -> f -> Builder { | as } { | bs }
 
 instance mapRecordWithIndexCons ::
@@ -138,7 +138,7 @@ instance hmapWithIndexVariant ::
   hmapWithIndex =
     mapVariantWithIndex (RLProxy :: RLProxy rl)
 
-class MapVariantWithIndex (xs :: RowList) f (as :: # Type) (bs :: # Type) | xs f -> bs, xs -> as where
+class MapVariantWithIndex (xs :: RowList Type) f (as :: Row Type) (bs :: Row Type) | xs f -> bs, xs -> as where
   mapVariantWithIndex :: RLProxy xs -> f -> Variant as -> Variant bs
 
 instance mapVariantWithIndexCons ::
@@ -177,7 +177,7 @@ instance hmapWithIndexVariantF ::
   hmapWithIndex =
     mapVariantFWithIndex (RLProxy :: RLProxy rl)
 
-class MapVariantFWithIndex (xs :: RowList) f (as :: # Type) (bs :: # Type) x y | xs f x -> as bs y where
+class MapVariantFWithIndex (xs :: RowList Type) f (as :: Row Type) (bs :: Row Type) x y | xs f x -> as bs y where
   mapVariantFWithIndex :: RLProxy xs -> f -> VariantF as x -> VariantF bs y
 
 instance mapVariantFWithIndexCons ::
