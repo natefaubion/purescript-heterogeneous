@@ -30,49 +30,49 @@ infixr 8 HCons as :
 
 newtype Counting (p :: Peano) a = Counting a
 
-instance hfoldlWithIndexCounting_nil :: HFoldlWithIndex f x (Counting p HNil) x where
+instance hfoldlWithIndexCounting_nil :: HFoldlWithIndex f x (Counting p HNil) where
   hfoldlWithIndex _ x _ = x
 
 instance hfoldlWithIndexCounting_go ::
-  ( FoldingWithIndex f (Peano p) x a y
-  , HFoldlWithIndex f y (Counting (S p) b) z
+  ( FoldingWithIndex f (Peano p) x a
+  , HFoldlWithIndex f x (Counting (S p) b)
   ) =>
-  HFoldlWithIndex f x (Counting p (HCons a b)) z
+  HFoldlWithIndex f x (Counting p (HCons a b))
   where
   hfoldlWithIndex f x (Counting (HCons a b)) = z
     where
     y = foldingWithIndex f (Peano :: Peano p) x a
     z = hfoldlWithIndex f y (Counting b :: Counting (S p) b)
 
-instance hfoldlWithIndexHNil :: HFoldlWithIndex f x HNil x where
+instance hfoldlWithIndexHNil :: HFoldlWithIndex f x HNil where
   hfoldlWithIndex _ x _ = x
 
 instance hfoldlWithIndexHCons ::
-  ( FoldingWithIndex f (Peano Z) x a y
-  , HFoldlWithIndex f y (Counting (S Z) rest) z
+  ( FoldingWithIndex f (Peano Z) x a
+  , HFoldlWithIndex f x (Counting (S Z) rest)
   ) =>
-  HFoldlWithIndex f x (HCons a rest) z
+  HFoldlWithIndex f x (HCons a rest)
   where
   hfoldlWithIndex f x (HCons a rest) = z
     where
     y = foldingWithIndex f (Peano :: Peano Z) x a
     z = hfoldlWithIndex f y (Counting rest :: Counting (S Z) rest)
 
-instance hfoldlHNil :: HFoldl f x HNil x where
+instance hfoldlHNil :: HFoldl f x HNil where
   hfoldl _ x _ = x
 else
 instance hfoldlHCons_one ::
-  Folding f x a z =>
-  HFoldl f x (HCons a HNil) z
+  Folding f x a =>
+  HFoldl f x (HCons a HNil)
   where
   hfoldl f x (HCons a _) =
     folding f x a
 else
 instance hfoldlHCons_many ::
-  ( Folding f x a y
-  , HFoldl f y (HCons b c) z
+  ( Folding f x a
+  , HFoldl f x (HCons b c)
   ) =>
-  HFoldl f x (HCons a (HCons b c)) z
+  HFoldl f x (HCons a (HCons b c))
   where
   hfoldl f x (HCons a rest) =
     hfoldl f (folding f x a) rest
@@ -81,13 +81,13 @@ data ShowWithIndex = ShowWithIndex
 
 instance foldingShowWithIndex ::
   (KnownPeano p, Show a) =>
-  FoldingWithIndex ShowWithIndex (Peano p) (Array (Tuple Int String)) a (Array (Tuple Int String))
+  FoldingWithIndex ShowWithIndex (Peano p) (Array (Tuple Int String)) a
   where
   foldingWithIndex _ p as a =
     as <> [ Tuple (reflectPeano p) (show a) ]
 
 showWithIndex :: forall hlist.
-  HFoldlWithIndex ShowWithIndex (Array (Tuple Int String)) hlist (Array (Tuple Int String)) =>
+  HFoldlWithIndex ShowWithIndex (Array (Tuple Int String)) hlist =>
   hlist ->
   Array (Tuple Int String)
 showWithIndex =
@@ -105,12 +105,12 @@ testShowWithIndex =
 
 data ShowHList = ShowHList
 
-instance foldingShowHList :: Show a => Folding ShowHList String a String where
+instance foldingShowHList :: Show a => Folding ShowHList String a where
   folding _ "" a = show a
   folding _ bs a = bs <> " : " <> show a
 
 showHList :: forall hlist.
-  HFoldl ShowHList String hlist String =>
+  HFoldl ShowHList String hlist =>
   hlist ->
   String
 showHList h =

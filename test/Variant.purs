@@ -12,7 +12,7 @@ data ShowCase = ShowCase
 
 instance showCase ::
   Show a =>
-  Folding ShowCase String a String where
+  Folding ShowCase String a where
   folding ShowCase s = append s <<< show
 
 type TestLabels =
@@ -25,7 +25,7 @@ someFoo :: Variant TestLabels
 someFoo = Variant.inj (SProxy :: SProxy "foo") 42
 
 showVariantValue :: forall r.
-  HFoldl ShowCase String (Variant r) String =>
+  HFoldl ShowCase String (Variant r) =>
   Variant r ->
   String
 showVariantValue =
