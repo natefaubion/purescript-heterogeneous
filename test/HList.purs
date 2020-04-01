@@ -3,7 +3,9 @@ module Test.HList where
 import Prelude
 
 import Data.Tuple (Tuple(..))
+import Effect (Effect)
 import Heterogeneous.Folding (class Folding, class FoldingWithIndex, class HFoldl, class HFoldlWithIndex, folding, foldingWithIndex, hfoldl, hfoldlWithIndex)
+import Test.Assert (assertEqual')
 
 foreign import kind Peano
 foreign import data S :: Peano -> Peano
@@ -91,9 +93,15 @@ showWithIndex :: forall hlist.
 showWithIndex =
   hfoldlWithIndex ShowWithIndex ([] :: Array (Tuple Int String))
 
-testShow :: _
-testShow =
-  showWithIndex ("foo" : 42 : true : 12.0 : HNil)
+testShowWithIndex :: Effect Unit
+testShowWithIndex =
+  assertEqual'
+    "testShowWithIndex"
+    { actual:
+        showWithIndex ("foo" : 42 : true : 12.0 : HNil)
+    , expected:
+        [(Tuple 0 "\"foo\""),(Tuple 1 "42"),(Tuple 2 "true"),(Tuple 3 "12.0")]
+    }
 
 data ShowHList = ShowHList
 
@@ -108,6 +116,17 @@ showHList :: forall hlist.
 showHList h =
   "(" <> hfoldl ShowHList "" h <> " : HNil)"
 
-testShow2 :: _
-testShow2 =
-  showHList ("foo" : 42 : true : 12.0 : HNil)
+testShowHList :: Effect Unit
+testShowHList =
+  assertEqual'
+    "testShowHList"
+    { actual:
+        showHList ("foo" : 42 : true : 12.0 : HNil)
+    , expected:
+        "(\"foo\" : 42 : true : 12.0 : HNil)"
+    }
+
+runHListTests :: Effect Unit
+runHListTests = do
+  testShowWithIndex
+  testShowHList

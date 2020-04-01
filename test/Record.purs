@@ -4,15 +4,17 @@ import Prelude
 
 import Data.Bifunctor (lmap)
 import Data.Either (Either(..))
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), isNothing)
 import Data.Symbol (class IsSymbol, SProxy, reflectSymbol)
 import Data.Tuple (Tuple(..))
+import Effect (Effect)
 import Heterogeneous.Folding (class Folding, class FoldingWithIndex, class HFoldl, class HFoldlWithIndex, hfoldl, hfoldlWithIndex)
 import Heterogeneous.Mapping (class HMapWithIndex, class Mapping, class MappingWithIndex, hmap, hmapWithIndex, mapping)
 import Prim.Row as Row
 import Record as Record
 import Record.Builder (Builder)
 import Record.Builder as Builder
+import Test.Assert (assert, assertEqual, assertEqual')
 
 newtype ZipProp r = ZipProp { | r }
 
@@ -29,17 +31,26 @@ zipRecord :: forall rfns rin rout.
 zipRecord =
   hmapWithIndex <<< ZipProp
 
-testZip :: _
+testZip :: Effect Unit
 testZip =
-  { foo: add 1
-  , bar: Tuple "bar"
-  , baz: \a -> not a
-  }
-  `zipRecord`
-  { foo: 12
-  , bar: 42.0
-  , baz: true
-  }
+  assertEqual
+    { actual:
+        { foo: add 1
+        , bar: Tuple "bar"
+        , baz: \a -> not a
+        }
+        `zipRecord`
+        { foo: 12
+        , bar: 42.0
+        , baz: true
+        }
+    , expected:
+        { foo: 13
+        , bar: Tuple "bar" 42.0
+        , baz: false
+        }
+    }
+
 
 data ShowProps = ShowProps
 
@@ -60,12 +71,19 @@ showRecord :: forall r.
 showRecord r =
   "{ " <> hfoldlWithIndex ShowProps "" r <> " }"
 
-testShow :: _
-testShow = showRecord
-  { foo: "foo"
-  , bar: 42
-  , baz: false
-  }
+testShow :: Effect Unit
+testShow =
+  assertEqual
+    { actual:
+        showRecord
+          { foo: "foo"
+          , bar: 42
+          , baz: false
+          }
+    , expected:
+        "{ bar: 42, baz: false, foo: \"foo\" }"
+    }
+
 
 data ShowPropsCase = ShowPropsCase
 
@@ -90,12 +108,18 @@ showRecordNonEmpty :: forall r.
 showRecordNonEmpty r =
   "{ " <> hfoldlWithIndex ShowPropsCase unit r <> " }"
 
-testShow2 :: _
-testShow2 = showRecordNonEmpty
-  { foo: "foo"
-  , bar: 42
-  , baz: false
-  }
+testShow2 :: Effect Unit
+testShow2 =
+  assertEqual
+    { actual:
+        showRecordNonEmpty
+          { foo: "foo"
+          , bar: 42
+          , baz: false
+          }
+    , expected:
+        "{ bar: 42, baz: false, foo: \"foo\" }"
+    }
 -- TypeError:
 -- testShow2 = showRecordNonEmpty {}
 
@@ -106,9 +130,15 @@ instance addOneAndShow ::
   Mapping AddOneAndShow n String where
   mapping AddOneAndShow = add one >>> show
 
-testAddOneAndShow :: _
+testAddOneAndShow :: Effect Unit
 testAddOneAndShow =
-  hmap AddOneAndShow { a: 1, b: 2.0, c: { x: 12, y: 42 } }
+  assertEqual
+    { actual:
+        hmap AddOneAndShow { a: 1, b: 2.0, c: { x: 12, y: 42 } }
+    , expected:
+        { a: "2", b: "3.0", c: "{ x: 13, y: 43 }" }
+    }
+
 
 data TraverseProp (f :: Type -> Type) k = TraverseProp k
 
@@ -139,12 +169,17 @@ traverseRecord k =
   map (flip Builder.build {})
     <<< hfoldlWithIndex (TraverseProp k :: TraverseProp f k) (pure identity :: f (Builder {} {}))
 
-test1 :: _
-test1 =
-  traverseRecord (Just :: Int -> Maybe Int)
-    { a: 1
-    , b: 2
-    , c: 3
+testTraverseRecord :: Effect Unit
+testTraverseRecord =
+  assertEqual
+    { actual:
+        traverseRecord (Just :: Int -> Maybe Int)
+          { a: 1
+          , b: 2
+          , c: 3
+          }
+    , expected:
+        (Just { a: 1, b: 2, c: 3 })
     }
 
 data SequencePropOf (f :: Type -> Type) = SequencePropOf
@@ -190,12 +225,31 @@ sequencePropsOf =
   map (flip Builder.build {})
     <<< hfoldlWithIndex (SequencePropOf :: SequencePropOf f) (pure identity :: f (Builder {} {}))
 
-test :: Maybe _
-test =
-  sequencePropsOf
-    { a: Just "Hello"
-    , b: Nothing
-    , c: 42
+testSequencePropsOf1 :: Effect Unit
+testSequencePropsOf1 =
+  assert $
+    isNothing $
+      sequencePropsOf
+        { a: Just "Hello"
+        , b: Nothing
+        , c: 42
+        }
+
+testSequencePropsOf2 :: Effect Unit
+testSequencePropsOf2 =
+  assertEqual
+    { actual:
+        sequencePropsOf
+          { a: Just "Hello"
+          , b: Just 5
+          , c: 42
+          }
+    , expected:
+        Just
+          { a: "Hello"
+          , b: 5
+          , c: 42
+          }
     }
 
 -----
@@ -216,15 +270,24 @@ replaceLeft :: forall rvals rin rout.
 replaceLeft =
   hmapWithIndex <<< ReplaceLeft
 
-testReplaceLeft :: _
+testReplaceLeft :: Effect Unit
 testReplaceLeft =
-  { a: "goodbye"
-  , b: 100
-  }
-  `replaceLeft`
-  { a: Left "hello"
-  , b: Right 1
-  }
+  assertEqual'
+    "testReplaceLeft"
+    { actual:
+        { a: "goodbye"
+        , b: 100
+        }
+        `replaceLeft`
+        { a: Left "hello"
+        , b: Right 1
+        }
+    , expected:
+        { a: Left "goodbye" :: Either String String -- Annotation required for compilation
+        , b: Right 1
+        }
+    }
+
 
 newtype ReplaceRight r = ReplaceRight { | r }
 
@@ -241,24 +304,50 @@ replaceRight :: forall rvals rin rout.
 replaceRight =
   hmapWithIndex <<< ReplaceRight
 
-testReplaceRight :: _
+testReplaceRight :: Effect Unit
 testReplaceRight =
-  { a: "goodbye"
-  , b: 100
-  }
-  `replaceRight`
-  { a: Left "hello"
-  , b: Right 1
-  }
+  assertEqual'
+    "testReplaceRight"
+    { actual:
+        { a: "goodbye"
+        , b: 100
+        }
+        `replaceRight`
+        { a: Left "hello"
+        , b: Right 1
+        }
+    , expected:
+        { a: Left "hello"
+        , b: Right 100 :: Either Int Int -- Annotation required for compilation
+        }
+    }
 
-testReplaceBoth :: forall rvals r.
+replaceBoth :: forall rvals r.
   HMapWithIndex (ReplaceLeft rvals) { | r } { | r } =>
   HMapWithIndex (ReplaceRight rvals) { | r } { | r } =>
   { | rvals } ->
   { | r } ->
   { | r }
-testReplaceBoth vals =
+replaceBoth vals =
   replaceLeft vals >>> replaceRight vals
+
+testReplaceBoth :: Effect Unit
+testReplaceBoth =
+  assertEqual'
+    "testReplaceBoth"
+    { actual:
+        { a: "goodbye"
+        , b: 100
+        }
+        `replaceBoth`
+        { a: Left "hello"
+        , b: Right 1
+        }
+    , expected:
+        { a: Left "goodbye" :: Either String String -- Annotation required for compilation
+        , b: Right 100 :: Either Int Int -- Annotation required for compilation
+        }
+    }
 
 -----
 -- Verify that multiple folds can be used in constraints.
@@ -272,6 +361,20 @@ instance countLeft :: Folding CountLeft Int (Either a b) Int where
 countLefts :: forall r. HFoldl CountLeft Int { | r } Int => { | r } -> Int
 countLefts = hfoldl CountLeft 0
 
+testCountLefts :: Effect Unit
+testCountLefts =
+  assertEqual'
+    "testCountLefts"
+    { actual:
+        countLefts
+          { a: Left "a"
+          , b: Right "b"
+          , c: Left "c"
+          }
+    , expected:
+        2
+    }
+
 data CountRight = CountRight
 
 instance countRight :: Folding CountRight Int (Either a b) Int where
@@ -281,12 +384,40 @@ instance countRight :: Folding CountRight Int (Either a b) Int where
 countRights :: forall r. HFoldl CountRight Int { | r } Int => { | r } -> Int
 countRights = hfoldl CountRight 0
 
+testCountRights :: Effect Unit
+testCountRights =
+  assertEqual'
+    "testCountRights"
+    { actual:
+        countRights
+          { a: Left "a"
+          , b: Right "b"
+          , c: Left "c"
+          }
+    , expected:
+        1
+    }
+
 countBoth :: forall r.
   HFoldl CountLeft Int { | r } Int =>
   HFoldl CountRight Int { | r } Int =>
   { | r } ->
   Int
 countBoth r = countRights r + countLefts r
+
+testCountBoth :: Effect Unit
+testCountBoth =
+  assertEqual'
+    "testCountBoth"
+    { actual:
+        countBoth
+          { a: Left "a"
+          , b: Right "b"
+          , c: Left "c"
+          }
+    , expected:
+        3
+    }
 
 -----
 -- Verify that multiple folds can be used in constraints.
@@ -311,3 +442,34 @@ showTwice r = do
   let a = "{ " <> hfoldlWithIndex ShowProps "" r <> " }"
       b = "[ " <> hfoldlWithIndex ShowValues "" r <> " ]"
   a <> b
+
+testShowTwice :: Effect Unit
+testShowTwice =
+  assertEqual'
+    "testShowTwice"
+    { actual:
+        showTwice
+          { foo: "foo"
+          , bar: 42
+          , baz: false
+          }
+    , expected:
+        "{ bar: 42, baz: false, foo: \"foo\" }[ 42, false, \"foo\" ]"
+    }
+
+runRecordTests :: Effect Unit
+runRecordTests = do
+  testZip
+  testShow
+  testShow2
+  testAddOneAndShow
+  testTraverseRecord
+  testSequencePropsOf1
+  testSequencePropsOf2
+  testReplaceLeft
+  testReplaceRight
+  testReplaceBoth
+  testCountLefts
+  testCountRights
+  testCountBoth
+  testShowTwice
