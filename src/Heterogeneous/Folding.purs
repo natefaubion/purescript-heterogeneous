@@ -127,7 +127,7 @@ instance foldlRecordCons ::
 instance foldlRecordNil ::
   FoldlRecord f x RL.Nil r x
   where
-  foldlRecordRowList f x _ r = x
+  foldlRecordRowList _ x _ _ = x
 
 instance hfoldlTuple ::
   ( Folding f x a y
