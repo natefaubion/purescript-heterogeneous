@@ -4,7 +4,9 @@ import Prelude
 
 import Data.Variant (SProxy(..), Variant)
 import Data.Variant as Variant
+import Effect (Effect)
 import Heterogeneous.Folding (class Folding, class HFoldl, hfoldl)
+import Test.Assert (assertEqual')
 
 data ShowCase = ShowCase
 
@@ -29,6 +31,16 @@ showVariantValue :: forall r.
 showVariantValue =
   hfoldl ShowCase ""
 
-test :: String
-test =
-  showVariantValue someFoo
+testShowVariantValue :: Effect Unit
+testShowVariantValue =
+  assertEqual'
+    "testShowVariantValue"
+    { actual:
+        showVariantValue someFoo
+    , expected:
+        "42"
+    }
+
+runVariantTests :: Effect Unit
+runVariantTests = do
+  testShowVariantValue
