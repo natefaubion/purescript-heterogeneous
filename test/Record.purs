@@ -19,7 +19,7 @@ newtype ZipProp r = ZipProp { | r }
 
 instance zipProps ::
   (IsSymbol sym, Row.Cons sym (a -> b) x fns) =>
-  MappingWithIndex (ZipProp fns) (proxy sym) a b where
+  MappingWithIndex (ZipProp fns) (Proxy sym) a b where
   mappingWithIndex (ZipProp fns) prop = Record.get prop fns
 
 zipRecord :: forall rfns rin rout.
@@ -46,7 +46,7 @@ data ShowProps = ShowProps
 
 instance showProps ::
   (Show a, IsSymbol sym) =>
-  FoldingWithIndex ShowProps (proxy sym) String a String
+  FoldingWithIndex ShowProps (Proxy sym) String a String
   where
   foldingWithIndex _ prop str a =
     pre <> reflectSymbol prop <> ": " <> show a
@@ -72,14 +72,14 @@ data ShowPropsCase = ShowPropsCase
 
 instance showPropsCase_Unit ::
   (Show a, IsSymbol sym) =>
-  FoldingWithIndex ShowPropsCase (proxy sym) Unit a String
+  FoldingWithIndex ShowPropsCase (Proxy sym) Unit a String
   where
   foldingWithIndex _ prop _ a =
     reflectSymbol prop <> ": " <> show a
 
 instance showPropsCase_String ::
   (Show a, IsSymbol sym) =>
-  FoldingWithIndex ShowPropsCase (proxy sym) String a String
+  FoldingWithIndex ShowPropsCase (Proxy sym) String a String
   where
   foldingWithIndex _ prop pre a =
     pre <> ", " <> reflectSymbol prop <> ": " <> show a
