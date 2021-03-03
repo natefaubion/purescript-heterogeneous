@@ -20,7 +20,7 @@
     "purescript-record": "^3.0.0",
     "purescript-tuples": "^6.0.0",
     "purescript-functors": "^4.0.0",
-    "purescript-variant": "https://github.com/JordanMartinez/purescript-variant.git#updateTo0.14",
+    "purescript-variant": "^7.0.0",
     "purescript-either": "^5.0.0"
   },
   "devDependencies": {
