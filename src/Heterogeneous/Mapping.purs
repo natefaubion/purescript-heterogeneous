@@ -16,7 +16,6 @@ import Prim.RowList (RowList)
 import Prim.RowList as RL
 import Record.Builder (Builder)
 import Record.Builder as Builder
-import Type.Data.RowList (RLProxy(..))
 import Type.Proxy (Proxy(..))
 
 class Mapping f a b | f a -> b where
@@ -68,7 +67,7 @@ instance hmapRecord ::
   where
   hmap =
     Builder.build
-      <<< mapRecordWithIndexBuilder (RLProxy :: RLProxy rl)
+      <<< mapRecordWithIndexBuilder (Proxy :: Proxy rl)
       <<< ConstMapping
 
 instance hmapWithIndexRecord ::
@@ -79,10 +78,10 @@ instance hmapWithIndexRecord ::
   where
   hmapWithIndex =
     Builder.build
-      <<< mapRecordWithIndexBuilder (RLProxy :: RLProxy rl)
+      <<< mapRecordWithIndexBuilder (Proxy :: Proxy rl)
 
 class MapRecordWithIndex (xs :: RowList Type) f (as :: Row Type) (bs :: Row Type) | xs f -> bs, xs -> as where
-  mapRecordWithIndexBuilder :: RLProxy xs -> f -> Builder { | as } { | bs }
+  mapRecordWithIndexBuilder :: forall proxy. proxy xs -> f -> Builder { | as } { | bs }
 
 instance mapRecordWithIndexCons ::
   ( IsSymbol sym
@@ -95,7 +94,7 @@ instance mapRecordWithIndexCons ::
   where
   mapRecordWithIndexBuilder _ f =
     Builder.modify prop (mappingWithIndex f prop)
-      <<< mapRecordWithIndexBuilder (RLProxy :: RLProxy rest) f
+      <<< mapRecordWithIndexBuilder (Proxy :: Proxy rest) f
     where
     prop = Proxy :: Proxy sym
 
@@ -128,7 +127,7 @@ instance hmapVariant ::
   HMap fn (Variant rin) (Variant rout)
   where
   hmap =
-    mapVariantWithIndex (RLProxy :: RLProxy rl) <<< ConstMapping
+    mapVariantWithIndex (Proxy :: Proxy rl) <<< ConstMapping
 
 instance hmapWithIndexVariant ::
   ( RL.RowToList rin rl
@@ -137,10 +136,10 @@ instance hmapWithIndexVariant ::
   HMapWithIndex fn (Variant rin) (Variant rout)
   where
   hmapWithIndex =
-    mapVariantWithIndex (RLProxy :: RLProxy rl)
+    mapVariantWithIndex (Proxy :: Proxy rl)
 
 class MapVariantWithIndex (xs :: RowList Type) f (as :: Row Type) (bs :: Row Type) | xs f -> bs, xs -> as where
-  mapVariantWithIndex :: RLProxy xs -> f -> Variant as -> Variant bs
+  mapVariantWithIndex :: forall proxy. proxy xs -> f -> Variant as -> Variant bs
 
 instance mapVariantWithIndexCons ::
   ( IsSymbol sym
@@ -152,7 +151,7 @@ instance mapVariantWithIndexCons ::
   MapVariantWithIndex (RL.Cons sym a rest) fn r2 r4
   where
   mapVariantWithIndex _ fn =
-    mapVariantWithIndex (RLProxy :: RLProxy rest) fn
+    mapVariantWithIndex (Proxy :: Proxy rest) fn
       # Variant.on label (Variant.inj label <<< mappingWithIndex fn label)
     where
     label = Proxy :: Proxy sym
@@ -179,7 +178,7 @@ instance hmapWithIndexVariantF ::
     mapVariantFWithIndex (Proxy :: Proxy rl)
 
 class MapVariantFWithIndex (xs :: RowList (Type -> Type)) f (as :: Row (Type -> Type)) (bs :: Row (Type -> Type)) x y | xs f x -> as bs y where
-  mapVariantFWithIndex :: Proxy xs -> f -> VariantF as x -> VariantF bs y
+  mapVariantFWithIndex :: forall proxy. proxy xs -> f -> VariantF as x -> VariantF bs y
 
 instance mapVariantFWithIndexCons ::
   ( IsSymbol sym
