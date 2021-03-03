@@ -5,7 +5,7 @@ import Prelude
 import Data.Bifunctor (lmap)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
-import Data.Symbol (class IsSymbol, SProxy, reflectSymbol)
+import Data.Symbol (class IsSymbol, reflectSymbol)
 import Data.Tuple (Tuple(..))
 import Heterogeneous.Folding (class Folding, class FoldingWithIndex, class HFoldl, class HFoldlWithIndex, hfoldl, hfoldlWithIndex)
 import Heterogeneous.Mapping (class HMapWithIndex, class Mapping, class MappingWithIndex, hmap, hmapWithIndex, mapping)
@@ -13,12 +13,13 @@ import Prim.Row as Row
 import Record as Record
 import Record.Builder (Builder)
 import Record.Builder as Builder
+import Type.Proxy (Proxy(..))
 
 newtype ZipProp r = ZipProp { | r }
 
 instance zipProps ::
   (IsSymbol sym, Row.Cons sym (a -> b) x fns) =>
-  MappingWithIndex (ZipProp fns) (SProxy sym) a b where
+  MappingWithIndex (ZipProp fns) (proxy sym) a b where
   mappingWithIndex (ZipProp fns) prop = Record.get prop fns
 
 zipRecord :: forall rfns rin rout.
@@ -45,7 +46,7 @@ data ShowProps = ShowProps
 
 instance showProps ::
   (Show a, IsSymbol sym) =>
-  FoldingWithIndex ShowProps (SProxy sym) String a String
+  FoldingWithIndex ShowProps (proxy sym) String a String
   where
   foldingWithIndex _ prop str a =
     pre <> reflectSymbol prop <> ": " <> show a
@@ -71,14 +72,14 @@ data ShowPropsCase = ShowPropsCase
 
 instance showPropsCase_Unit ::
   (Show a, IsSymbol sym) =>
-  FoldingWithIndex ShowPropsCase (SProxy sym) Unit a String
+  FoldingWithIndex ShowPropsCase (proxy sym) Unit a String
   where
   foldingWithIndex _ prop _ a =
     reflectSymbol prop <> ": " <> show a
 
 instance showPropsCase_String ::
   (Show a, IsSymbol sym) =>
-  FoldingWithIndex ShowPropsCase (SProxy sym) String a String
+  FoldingWithIndex ShowPropsCase (proxy sym) String a String
   where
   foldingWithIndex _ prop pre a =
     pre <> ", " <> reflectSymbol prop <> ": " <> show a
@@ -121,7 +122,7 @@ instance traverseProp ::
   ) =>
   FoldingWithIndex
     (TraverseProp f k)
-    (SProxy sym)
+    (Proxy sym)
     (f (Builder { | ra } { | rb }))
     a
     (f (Builder { | ra } { | rc }))
@@ -157,7 +158,7 @@ instance sequencePropOf_1 ::
   ) =>
   FoldingWithIndex
     (SequencePropOf f)
-    (SProxy sym)
+    (Proxy sym)
     (f (Builder { | ra } { | rb }))
     (f a)
     (f (Builder { | ra } { | rc }))
@@ -173,7 +174,7 @@ instance sequencePropOf_2 ::
   ) =>
   FoldingWithIndex
     (SequencePropOf f)
-    (SProxy sym)
+    (Proxy sym)
     (f (Builder { | ra } { | rb }))
     x
     (f (Builder { | ra } { | rc }))
@@ -205,7 +206,7 @@ newtype ReplaceLeft r = ReplaceLeft { | r }
 
 instance replaceLeftH ::
   (IsSymbol sym, Row.Cons sym a x vals) =>
-  MappingWithIndex (ReplaceLeft vals) (SProxy sym) (Either a b) (Either a b) where
+  MappingWithIndex (ReplaceLeft vals) (Proxy sym) (Either a b) (Either a b) where
   mappingWithIndex (ReplaceLeft vals) prop = lmap (const $ Record.get prop vals)
 
 replaceLeft :: forall rvals rin rout.
@@ -230,7 +231,7 @@ newtype ReplaceRight r = ReplaceRight { | r }
 
 instance replaceRightH ::
   (IsSymbol sym, Row.Cons sym b x vals) =>
-  MappingWithIndex (ReplaceRight vals) (SProxy sym) (Either a b) (Either a b) where
+  MappingWithIndex (ReplaceRight vals) (Proxy sym) (Either a b) (Either a b) where
   mappingWithIndex (ReplaceRight vals) prop = map (const $ Record.get prop vals)
 
 replaceRight :: forall rvals rin rout.
@@ -295,7 +296,7 @@ data ShowValues = ShowValues
 
 instance showValues ::
   (Show a, IsSymbol sym) =>
-  FoldingWithIndex ShowValues (SProxy sym) String a String
+  FoldingWithIndex ShowValues (Proxy sym) String a String
   where
   foldingWithIndex _ prop str a = pre <> show a
     where

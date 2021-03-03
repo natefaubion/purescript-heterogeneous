@@ -5,11 +5,11 @@ import Prelude
 import Data.Tuple (Tuple(..))
 import Heterogeneous.Folding (class Folding, class FoldingWithIndex, class HFoldl, class HFoldlWithIndex, folding, foldingWithIndex, hfoldl, hfoldlWithIndex)
 
-foreign import kind Peano
-foreign import data S :: Peano -> Peano
-foreign import data Z :: Peano
+data Peano'
+foreign import data S :: Peano' -> Peano'
+foreign import data Z :: Peano'
 
-data Peano (p :: Peano) = Peano
+data Peano (p :: Peano') = Peano
 
 class KnownPeano p where
   reflectPeano :: Peano p -> Int
@@ -26,7 +26,7 @@ data HNil = HNil
 infixr 8 type HCons as :
 infixr 8 HCons as :
 
-newtype Counting (p :: Peano) a = Counting a
+newtype Counting (p :: Peano') a = Counting a
 
 instance hfoldlWithIndexCounting_nil :: HFoldlWithIndex f x (Counting p HNil) x where
   hfoldlWithIndex _ x _ = x
