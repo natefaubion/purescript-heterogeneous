@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/natefaubion/purescript-heterogeneous.git"
+    "url": "https://github.com/natefaubion/purescript-heterogeneous.git"
   },
   "ignore": [
     "**/.*",
@@ -16,14 +16,14 @@
     "output"
   ],
   "dependencies": {
-    "purescript-prelude": "^4.1.0",
-    "purescript-record": "^2.0.0",
-    "purescript-tuples": "^5.0.0",
-    "purescript-functors": "^3.0.1",
-    "purescript-variant": "^6.0.0",
-    "purescript-either": "^4.0.0"
+    "purescript-prelude": "^5.0.0",
+    "purescript-record": "^3.0.0",
+    "purescript-tuples": "^6.0.0",
+    "purescript-functors": "^4.0.0",
+    "purescript-variant": "^7.0.0",
+    "purescript-either": "^5.0.0"
   },
   "devDependencies": {
-    "purescript-psci-support": "^4.0.0"
+    "purescript-psci-support": "^5.0.0"
   }
 }
