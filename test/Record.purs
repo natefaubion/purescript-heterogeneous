@@ -13,7 +13,7 @@ import Prim.Row as Row
 import Record as Record
 import Record.Builder (Builder)
 import Record.Builder as Builder
-import Type.Proxy (Proxy(..))
+import Type.Proxy (Proxy)
 
 newtype ZipProp r = ZipProp { | r }
 
@@ -298,7 +298,7 @@ instance showValues ::
   (Show a, IsSymbol sym) =>
   FoldingWithIndex ShowValues (Proxy sym) String a String
   where
-  foldingWithIndex _ prop str a = pre <> show a
+  foldingWithIndex _ _ str a = pre <> show a
     where
     pre | str == "" = ""
         | otherwise = str <> ", "
