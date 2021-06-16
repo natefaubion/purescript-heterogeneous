@@ -85,7 +85,7 @@ instance hfoldlWithIndexRowListCons ::
 instance hfoldlWithIndexRowListNil ::
   HFoldlWithIndex f x (Proxy RL.Nil) x
   where
-  hfoldlWithIndex f x _ = x
+  hfoldlWithIndex _ x _ = x
 
 instance hfoldlRecord ::
   ( RL.RowToList r rl
@@ -126,7 +126,7 @@ instance foldlRecordCons ::
 instance foldlRecordNil ::
   FoldlRecord f x RL.Nil r x
   where
-  foldlRecordRowList f x _ r = x
+  foldlRecordRowList _ x _ _ = x
 
 instance hfoldlTuple ::
   ( Folding f x a y
