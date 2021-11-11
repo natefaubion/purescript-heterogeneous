@@ -110,12 +110,12 @@ newtype ZipProps fns = ZipProps { | fns }
 ```
 
 If we use `MappingWithIndex` instead of `Mapping` we can utilize the field name
-as well via `SProxy`.
+as well via `Proxy`.
 
 ```purescript
 instance zipProps ::
   (IsSymbol sym, Row.Cons sym (a -> b) x fns) =>
-  MappingWithIndex (ZipProps fns) (SProxy sym) a b where
+  MappingWithIndex (ZipProps fns) (Proxy sym) a b where
   mappingWithIndex (ZipProps fns) prop = Record.get prop fns
 ```
 
