@@ -167,7 +167,7 @@ except we will implement `Folding` or `FoldingWithIndex`.
 ```purescript
 instance showProps ::
   (Show a, IsSymbol sym) =>
-  FoldingWithIndex ShowProps (SProxy sym) String a String where
+  FoldingWithIndex ShowProps (Proxy sym) String a String where
   foldingWithIndex ShowProps prop str a =
     pre <> reflectSymbol prop <> ": " <> show a
     where
