@@ -1,7 +1,7 @@
 # purescript-heterogeneous
 
 [![Latest release](http://img.shields.io/github/release/natefaubion/purescript-heterogeneous.svg)](https://github.com/natefaubion/purescript-heterogeneous/releases)
-[![Build status](https://travis-ci.org/natefaubion/purescript-heterogeneous.svg?branch=master)](https://travis-ci.org/natefaubion/purescript-heterogeneous)
+[![Build status](https://github.com/natefaubion/purescript-heterogeneous/workflows/CI/badge.svg?branch=master)](https://github.com/natefaubion/purescript-heterogeneous/actions?query=workflow%3ACI+branch%3Amaster)
 
 Maps and folds for heterogeneous data types.
 
