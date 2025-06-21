@@ -1,18 +1,33 @@
-name: CI
-
 on:
   push:
     branches: [master]
   pull_request:
+    branches: [master]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: purescript-contrib/setup-purescript@v2.0.0
-      - run: |
-          npx bower install
-          npx pulp build
-          npx pulp build --include test
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Cache PureScript dependencies
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-spago-${{ hashFiles('**/spago.lock') }}
+          path: |
+            .spago
+            output
+
+      - name: Install npm dependencies
+        run: npm install --include=dev
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build -- --pedantic-packages

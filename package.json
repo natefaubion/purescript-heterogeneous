@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "devDependencies": {
+    "purescript": "^0.15.15",
+    "spago": "^0.93.44"
+  },
+  "scripts": {
+    "install": "spago install",
+    "build": "spago build"
+  }
+}
