@@ -193,6 +193,60 @@ showRecord { a: "foo" , b: 42 , c: false }
 "{ a: \"foo\", b: 42, c: false }"
 ```
 
+### Example: Variadic arguments
+
+With typeclasses and return-type polymorphism, we can emulate variadic functions
+which take an arbitrary number of arguments. These arguments form a
+heterogeneous list, so we can fold over them like with `HFoldl`.
+
+In this example we will implement a basic interpolation function which appends
+strings and automatically `show`s other types. First, like the previous example,
+we define the data type for our fold function:
+
+```purescript
+data Interp = Interp
+```
+
+Next, we'll implement a `Folding` instance:
+
+```purescript
+instance Folding Interp String String String where
+  folding _ acc a = acc <> a
+
+else instance Show a => Folding Interp String a String where
+  folding _ acc a = acc <> show a
+```
+
+We also need to implement an instance of `Resulting`. With `hfoldl`s, we have
+a concrete heterogeneous data type, so we can do this after the fact in a
+wrapper function. With variadic functions, however, don't know how many
+arguments the user will apply, so we need some extra machinery to potentially
+do a final "clean up" on the accumulator to get something that the user wants.
+
+In this case we can use the accumulator as-is, so `identity` is appropriate:
+
+```purescript
+instance Resulting Interp String String where
+  resulting _ = identity
+```
+
+In some cases, a `TypeEquality` rather than `identity` may help with type
+inference, however.
+
+Finally, we can wrap a call to `variadic` with our initial accumulator:
+
+```purescript
+interp :: forall args. Variadic Interp String args => args
+interp = variadic Interp ""
+```
+
+```purescript
+interp "foo" 42 "baz" false :: String
+```
+```
+"foo42bazfalse"
+```
+
 ## Helping type inference along
 
 The compiler will not always be able to infer all types for the maps and folds
